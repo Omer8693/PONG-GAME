@@ -1,0 +1,4 @@
+Model,Mean,Std,Min,Max
+REINFORCE,22.2,40.87,-21.3,160.2
+ExpectedSARSA,45.97,48.23,-19.9,179.6
+A2C,124.17,90.5,-12.1,459.5

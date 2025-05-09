@@ -10,21 +10,28 @@ from Agent.agent_pg import PolicyNetwork
 from Agent.agent_expected_sarsa import QNetwork
 from stable_baselines3 import A2C
 
-# Komut satırından argümanlar: timesteps, mode
+# Command-line arguments: timesteps and mode
 timesteps_str = sys.argv[1] if len(sys.argv) > 1 else "50k"
 mode_str = sys.argv[2] if len(sys.argv) > 2 else "simple"
 is_complex = mode_str.lower() == "complex"
 
+# Directory for saved models
 model_dir = "./models"
+
+# Supported algorithms and their model type identifier
 ALGORITHMS = {
     "REINFORCE": "pg",
     "ExpectedSARSA": "sarsa",
     "A2C": "a2c"
 }
 
+# Number of episodes to evaluate each model
 NUM_EPISODES = 100
 
 def resolve_model_path_and_type(algo_name):
+    """
+    Determines the correct file path and model type extension for a given algorithm.
+    """
     for ext in [".pt", ".zip"]:
         filename = f"{algo_name}_{timesteps_str}_{mode_str}{ext}"
         full_path = os.path.join(model_dir, filename)
@@ -33,9 +40,14 @@ def resolve_model_path_and_type(algo_name):
     return None, None
 
 def evaluate_policy(model_name, model_type, model_path):
+    """
+    Runs evaluation of a model over a fixed number of episodes.
+    Returns statistics: mean, std, min, max and raw rewards.
+    """
     env = PongEnv(complex_mode=is_complex)
     total_rewards = []
 
+    # Load the appropriate model depending on the type
     if model_type == "pg":
         obs_dim = env.observation_space.shape[0]
         act_dim = env.action_space.n
@@ -53,6 +65,7 @@ def evaluate_policy(model_name, model_type, model_path):
     else:
         raise ValueError("Unknown model type!")
 
+    # Run the model for a number of episodes
     for _ in range(NUM_EPISODES):
         obs, _ = env.reset()
         done = False
@@ -75,6 +88,7 @@ def evaluate_policy(model_name, model_type, model_path):
         total_rewards.append(total_reward)
 
     env.close()
+
     return (
         np.mean(total_rewards),
         np.std(total_rewards),
@@ -83,33 +97,10 @@ def evaluate_policy(model_name, model_type, model_path):
         total_rewards
     )
 
-def plot_bar_and_box(results, results_raw):
-    algos = list(results.keys())
-    means = [results[a]["mean"] for a in algos]
-    stds = [results[a]["std"] for a in algos]
-    data = [results_raw[a] for a in algos]
-
-    fig, axs = plt.subplots(1, 2, figsize=(12, 5))
-
-    # Bar chart
-    axs[0].bar(algos, means, yerr=stds, capsize=10, color="skyblue")
-    axs[0].set_title("Average Reward")
-    axs[0].set_ylabel("Reward")
-    axs[0].grid(axis='y', linestyle='--', alpha=0.7)
-
-    # Boxplot
-    axs[1].boxplot(data, labels=algos, patch_artist=True,
-                   boxprops=dict(facecolor="lightgreen"),
-                   medianprops=dict(color="darkgreen"))
-    axs[1].set_title("Reward Distribution")
-    axs[1].grid(axis='y', linestyle='--', alpha=0.7)
-
-    plt.suptitle(f"Model Evaluation – {timesteps_str}, {mode_str.capitalize()} Mode", fontsize=14)
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
-    plt.savefig(f"eval_plot_{timesteps_str}_{mode_str}.png")
-    plt.show()
-
 def plot_lineplot(results_raw):
+    """
+    Draws a line plot of episode rewards for each algorithm.
+    """
     plt.figure(figsize=(10, 5))
     for algo, rewards in results_raw.items():
         plt.plot(rewards, label=algo, linewidth=2)
@@ -124,13 +115,16 @@ def plot_lineplot(results_raw):
     plt.show()
 
 def run_evaluation():
+    """
+    Main function to evaluate all models and print statistics and plots.
+    """
     print(f"📊 Evaluating models for: {timesteps_str} - {mode_str} mode")
     print(f"{'Model':<20} {'Mean':>8} {'Std':>8} {'Min':>8} {'Max':>8}")
     print("-" * 52)
 
-    results = {}
-    results_raw = {}
-    table_data = []
+    results = {}      # Summary statistics
+    results_raw = {}  # Full reward sequences
+    table_data = []   # For pandas summary table
 
     for algo in ALGORITHMS.keys():
         model_path, model_type = resolve_model_path_and_type(algo)
@@ -149,8 +143,8 @@ def run_evaluation():
         else:
             print(f"{algo:<20} {'MISSING':>8} {'-':>8} {'-':>8} {'-':>8}")
 
+    # Generate plot and CSV if results were collected
     if results:
-        plot_bar_and_box(results, results_raw)
         plot_lineplot(results_raw)
 
         df = pd.DataFrame(table_data)

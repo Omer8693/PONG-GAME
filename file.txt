@@ -1,6 +1,8 @@
-TensorBoard'u başlatmak
+Start to TensorBoard
 tensorboard --logdir=./Pong_Log
 
+Start to evaluate_models.py ..k simple/complex
+exempel
 python evaluate_models.py 50k simple
 
 python evaluate_models.py 50k complex

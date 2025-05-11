@@ -19,8 +19,9 @@ This project showcases how to train AI agents to play a custom Pong game using v
 Pong_Game/
 ├── Agent/
 │   ├── agent_pg.py               # REINFORCE policy network
-│   ├── agent_expected_sarsa.py  # Q-network for Expected SARSA
-│   └── Paddle.py                # Paddle sprite logic
+│   ├── agent_expected_sarsa.py   # Q-network for Expected SARSA
+|   ├── agent_a2c.py              # A2C 
+│   └── Paddle.py                 # Paddle sprite logic
 │
 ├── Env.py                       # Custom Gym-compatible Pong environment
 ├── Constants.py                 # Centralized settings & hyperparameters
@@ -56,18 +57,18 @@ python train_expected_sarsa.py   # Expected SARSA
 
 Start TensorBoard:
 
-```bash
+bash
 tensorboard --logdir Pong_Log/
-```
+
 
 Then open your browser at: http://localhost:6006  
 You'll find reward curves, loss values, and entropy graphs for each algorithm.
 
 ## Evaluating Trained Models
 
-```bash
+bash
 python evaluate.py 200k simple
-```
+
 
 Arguments:
 
